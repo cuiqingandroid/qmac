@@ -76,20 +76,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if CommandLine.arguments.contains("--show-menubar") { showMenuBarPanel() }
         if CommandLine.arguments.contains("--selftest") { runSelfTest() }
 
-        // 菜单栏 App 没有 Dock 图标也没有窗口，首次启动必须给点看得见的反馈，
-        // 否则用户双击完只会觉得「没打开」。
-        if !UserDefaults.standard.bool(forKey: "hasLaunchedBefore"),
-           !CommandLine.arguments.contains("--selftest") {
+        // 菜单栏 App 没有 Dock 图标也没有窗口，双击后必须给点看得见的反馈，
+        // 否则用户只会觉得「没打开」。开机自启那次除外——那种场景就该安静启动。
+        if !isDiagnostic, !launchedByLoginItem {
+            let firstRun = !UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
             openSettings()
-            DispatchQueue.main.async { MainActor.assumeIsolated { self.showWelcome() } }
+            if firstRun {
+                DispatchQueue.main.async { MainActor.assumeIsolated { self.showWelcome() } }
+            }
         }
     }
 
-    /// 在访达里再次双击已经在运行的 App 时弹出剪贴板面板，好歹有个反馈
+    /// 在访达/启动台里双击已经在运行的 App 时打开设置窗口。
+    /// 这个 App 没有 Dock 图标，菜单栏图标还可能被系统折叠掉，
+    /// 双击必须给一个看得见的落点，否则用户根本不知道它开没开、也找不到入口。
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
-        showClipboard()
+        openSettings()
         return true
+    }
+
+    /// 区分「开机自启」和「用户主动双击」。
+    /// 不能用 XPC_SERVICE_NAME——现代 macOS 所有 GUI 应用都由 launchd 拉起，双击也会带上它。
+    /// 真正的判据是启动 AppleEvent 里的 'lgit'（launched as login item）标志，
+    /// 它只在 applicationDidFinishLaunching 期间读得到。
+    private var launchedByLoginItem: Bool {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent,
+              event.eventID == AEEventID(kAEOpenApplication) else { return false }
+        let launchedAsLogInItem: UInt32 = 0x6C676974   // 'lgit'
+        return event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == launchedAsLogInItem
     }
 
     private func otherRunningInstance() -> NSRunningApplication? {

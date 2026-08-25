@@ -43,6 +43,14 @@ xattr -dr com.apple.quarantine /Applications/qmac.app
 
 只跑不打包：`swift build -c release && .build/release/qmac`
 
+## 怎么打开它
+
+qmac 是菜单栏 App：**没有 Dock 图标、没有主窗口**，装好后只在菜单栏留一个 ⚡ 图标。
+
+**在访达或启动台里双击 qmac，就会打开设置窗口**——不管它当时有没有在后台运行。设置窗口里能看到四个快捷键、权限状态和打赏入口。这是有意为之：菜单栏塞满时系统会把图标折叠掉（qmac 自己也不例外），双击必须有个看得见的落点，否则根本无从下手。
+
+开机自启那次不会弹窗口（靠启动 AppleEvent 里的 `lgit` 标志判断），安静启动。
+
 ## 四个功能
 
 ### 1. 快速搜索（`⌥Space`）
