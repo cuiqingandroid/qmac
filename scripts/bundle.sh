@@ -1,12 +1,12 @@
 #!/bin/bash
-# 把 SwiftPM 产物组装成 QuickKit.app，并生成 zip / dmg。
+# 把 SwiftPM 产物组装成 qmac.app，并生成 zip / dmg。
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
-APP_NAME="QuickKit"
+APP_NAME="qmac"
 VERSION="1.0.0"
-BUNDLE_ID="com.cuiqing.quickkit"
+BUNDLE_ID="com.cuiqing.qmac"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
 
@@ -62,7 +62,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key>  <string>14.0</string>
     <key>LSUIElement</key>             <true/>
     <key>NSHighResolutionCapable</key> <true/>
-    <key>NSHumanReadableCopyright</key><string>QuickKit</string>
+    <key>NSHumanReadableCopyright</key><string>qmac</string>
 </dict>
 </plist>
 PLIST
@@ -71,9 +71,10 @@ printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 # 有 Developer ID 证书就正式签名 + 公证，没有就退回 ad-hoc 临时签名。
 # 只有经过公证的包，用户下载后才不会看到「来源不明」。
-IDENTITY="${QUICKKIT_SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2>/dev/null \
-    | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')}"
-NOTARY_PROFILE="${QUICKKIT_NOTARY_PROFILE:-AC_PASSWORD}"
+# 注意：grep 找不到证书会返回 1，配合 set -e 会让整个脚本静默退出，所以要 || true
+IDENTITY="${QMAC_SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2>/dev/null \
+    | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/' || true)}"
+NOTARY_PROFILE="${QMAC_NOTARY_PROFILE:-AC_PASSWORD}"
 NOTARIZED=0
 
 if [ -n "$IDENTITY" ]; then

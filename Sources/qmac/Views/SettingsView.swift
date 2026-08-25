@@ -118,13 +118,13 @@ struct SettingsView: View {
                                 ignoreText = ""
                                 onHotKeysChanged()
                             }
-                            Button("退出 QuickKit") { NSApp.terminate(nil) }
+                            Button("退出 qmac") { NSApp.terminate(nil) }
                         }
                     }
                     row("支持作者", detail: "免费开源，觉得顺手可以请我喝杯咖啡") {
                         Button("打赏…") { AppDelegate.shared?.openDonate() }
                     }
-                    Text("QuickKit \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") · 原生 macOS 版")
+                    Text("qmac \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") · 原生 macOS 版")
                         .font(.caption).foregroundStyle(.tertiary)
                 }
             }

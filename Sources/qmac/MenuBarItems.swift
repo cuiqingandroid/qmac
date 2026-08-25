@@ -65,7 +65,7 @@ enum MenuBarItems {
     // MARK: - 枚举
 
     /// 先问 ControlCenter，再遍历各 App 自己的 AXExtrasMenuBar。
-    /// 宽度为 0 的是控制中心面板内部的模块（不在菜单栏上），丢掉；QuickKit 自己也不列。
+    /// 宽度为 0 的是控制中心面板内部的模块（不在菜单栏上），丢掉；qmac 自己也不列。
     static func all(candidates apps: [AppRef]) -> [Item] {
         let ranges = visibleRanges()
 

@@ -161,7 +161,7 @@ final class SearchViewModel: ObservableObject {
         configuration.activates = true
         NSWorkspace.shared.openApplication(at: entry.url, configuration: configuration) { _, error in
             if let error {
-                NSLog("[QuickKit] 启动 \(entry.name) 失败: \(error.localizedDescription)")
+                NSLog("[qmac] 启动 \(entry.name) 失败: \(error.localizedDescription)")
             }
         }
     }

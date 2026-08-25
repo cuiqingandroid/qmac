@@ -120,7 +120,7 @@ final class Settings: ObservableObject {
             if enabled { try SMAppService.mainApp.register() }
             else { try SMAppService.mainApp.unregister() }
         } catch {
-            NSLog("[QuickKit] 设置开机自启失败: \(error.localizedDescription)")
+            NSLog("[qmac] 设置开机自启失败: \(error.localizedDescription)")
             DispatchQueue.main.async { self.launchAtLogin = Settings.readLoginItemState() }
         }
     }

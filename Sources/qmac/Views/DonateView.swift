@@ -13,7 +13,7 @@ struct DonateView: View {
             VStack(spacing: 5) {
                 Text("请作者喝杯咖啡 ☕️")
                     .font(.system(size: 17, weight: .semibold))
-                Text("QuickKit 是免费开源的小工具，觉得顺手的话可以随意打赏，完全自愿。")
+                Text("qmac 是免费开源的小工具，觉得顺手的话可以随意打赏，完全自愿。")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -33,7 +33,7 @@ struct DonateView: View {
                 }
             }
 
-            Link("项目主页 · GitHub", destination: URL(string: "https://github.com/cuiqingandroid/QuickKit")!)
+            Link("项目主页 · GitHub", destination: URL(string: "https://github.com/cuiqingandroid/qmac")!)
                 .font(.system(size: 12))
         }
         .padding(24)

@@ -47,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // 已经有一份在跑就把它唤到前面，自己退出。
         // 否则两份实例会抢同一组全局快捷键，后启动的那份注册不上。
         // 诊断模式不受单实例保护限制，否则常驻实例在跑时探测命令会直接退出
-        let diagnostic = ["--selftest", "--menubar-probe", "--show-clipboard", "--show-calc", "--show-menubar"]
+        let diagnostic = ["--selftest", "--menubar-probe", "--show-clipboard", "--show-search", "--show-menubar"]
         let isDiagnostic = CommandLine.arguments.contains { diagnostic.contains($0) }
         if !isDiagnostic, let running = otherRunningInstance() {
             running.activate()
@@ -70,7 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             MainActor.assumeIsolated { self.registerHotKeys() }
         }
 
-        // 调试用：QuickKit.app/Contents/MacOS/QuickKit --show-clipboard | --show-calc | --selftest
+        // 调试用：qmac.app/Contents/MacOS/qmac --show-clipboard | --show-search | --selftest
         if CommandLine.arguments.contains("--show-clipboard") { showClipboard() }
         if CommandLine.arguments.contains("--show-search") { showSearch() }
         if CommandLine.arguments.contains("--show-menubar") { showMenuBarPanel() }
@@ -102,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func showWelcome() {
         let settings = Settings.shared
         let alert = NSAlert()
-        alert.messageText = "QuickKit 已经在菜单栏运行"
+        alert.messageText = "qmac 已经在菜单栏运行"
         let lines: [String] = [
             "它没有 Dock 图标，看菜单栏右侧的 ⚡ 图标。",
             "",
@@ -146,9 +146,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         // 位置由系统和用户的 ⌘ 拖拽决定，autosaveName 至少能让它在重启后回到原位。
         // macOS 没有公开 API 能强制自己不被折叠——菜单栏塞不下时照样会被挤掉。
-        item.autosaveName = "QuickKitStatusItem"
+        item.autosaveName = "qmacStatusItem"
         item.isVisible = true
-        item.button?.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "QuickKit")
+        item.button?.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "qmac")
         item.button?.image?.isTemplate = true
         item.menu = buildMenu()
         statusItem = item
@@ -196,7 +196,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
 
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let about = NSMenuItem(title: "QuickKit v\(version)", action: nil, keyEquivalent: "")
+        let about = NSMenuItem(title: "qmac v\(version)", action: nil, keyEquivalent: "")
         about.isEnabled = false
         menu.addItem(about)
 
@@ -336,7 +336,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                               styleMask: [.titled, .closable],
                               backing: .buffered, defer: false)
         window.contentViewController = hosting
-        window.title = "支持 QuickKit"
+        window.title = "支持 qmac"
         window.isReleasedWhenClosed = false
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -367,7 +367,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                               backing: .buffered,
                               defer: false)
         window.contentViewController = hosting
-        window.title = "QuickKit 设置"
+        window.title = "qmac 设置"
         window.isReleasedWhenClosed = false
         window.setContentSize(NSSize(width: 620, height: 640))
         window.center()
@@ -383,7 +383,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// 冒烟自测：弹出两个面板、模拟一次外部复制，检查历史是否落库，然后退出
     private func runSelfTest() {
-        let marker = "QuickKit selftest \(UUID().uuidString.prefix(8))"
+        let marker = "qmac selftest \(UUID().uuidString.prefix(8))"
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(marker, forType: .string)
 
@@ -439,7 +439,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let alert = NSAlert()
         alert.messageText = "自动粘贴需要「辅助功能」权限"
         alert.informativeText = "内容已经复制到剪贴板，手动按 ⌘V 也能粘贴。\n"
-            + "若要自动粘贴，请在「系统设置 → 隐私与安全性 → 辅助功能」里勾选 QuickKit。"
+            + "若要自动粘贴，请在「系统设置 → 隐私与安全性 → 辅助功能」里勾选 qmac。"
         alert.addButton(withTitle: "去授权")
         alert.addButton(withTitle: "稍后再说")
         if alert.runModal() == .alertFirstButtonReturn {

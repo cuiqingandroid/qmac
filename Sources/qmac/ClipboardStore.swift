@@ -36,8 +36,16 @@ final class ClipboardStore: ObservableObject {
 
     private init() {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        baseURL = support.appendingPathComponent("QuickKit", isDirectory: true)
+        baseURL = support.appendingPathComponent("qmac", isDirectory: true)
         imagesURL = baseURL.appendingPathComponent("images", isDirectory: true)
+
+        // 从旧名字 QuickKit 迁移过来，别把剪贴板历史丢了
+        let legacy = support.appendingPathComponent("QuickKit", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: baseURL.path),
+           FileManager.default.fileExists(atPath: legacy.path) {
+            try? FileManager.default.moveItem(at: legacy, to: baseURL)
+        }
+
         try? FileManager.default.createDirectory(at: imagesURL, withIntermediateDirectories: true)
         load()
     }

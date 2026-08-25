@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "QuickKit",
+    name: "qmac",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "QuickKit",
-            path: "Sources/QuickKit",
+            name: "qmac",
+            path: "Sources/qmac",
             swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]

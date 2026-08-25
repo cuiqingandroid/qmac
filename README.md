@@ -1,4 +1,4 @@
-# QuickKit
+# qmac
 
 常驻 macOS 菜单栏的快捷小工具。Swift + AppKit/SwiftUI 写的，**打包后 600KB 出头，dmg 不到 600KB**。
 
@@ -13,24 +13,24 @@
 
 ## 安装
 
-到 [Releases](https://github.com/cuiqingandroid/QuickKit/releases) 下载 dmg，拖进「应用程序」。
+到 [Releases](https://github.com/cuiqingandroid/qmac/releases) 下载 dmg，拖进「应用程序」。
 
 ### 首次打开会提示「来源不明 / 无法验证开发者」
 
-这是正常的。QuickKit 只有 ad-hoc 临时签名，**没有经过 Apple 公证**（公证需要 99 美元/年的 Apple Developer Program 账号）。
+这是正常的。qmac 只有 ad-hoc 临时签名，**没有经过 Apple 公证**（公证需要 99 美元/年的 Apple Developer Program 账号）。
 浏览器下载的文件会被打上 `com.apple.quarantine` 隔离标记，Gatekeeper 因此拦下。
 
 **最快的办法**——终端里执行一行，去掉隔离标记：
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/QuickKit.app
+xattr -dr com.apple.quarantine /Applications/qmac.app
 ```
 
 **或者走系统界面**（macOS 15 Sequoia 起，旧版那招「右键 → 打开」已经被 Apple 取消了）：
 
-1. 双击 QuickKit，会弹出被阻止的提示，点「完成」
+1. 双击 qmac，会弹出被阻止的提示，点「完成」
 2. 打开「系统设置 → 隐私与安全性」，往下滚
-3. 会看到一行「已阻止 QuickKit…」，点右边的**「仍要打开」**
+3. 会看到一行「已阻止 qmac…」，点右边的**「仍要打开」**
 4. 再确认一次，之后就不会再问了
 
 介意这个提示、或者不放心来路的话，**直接克隆仓库自己编译**是最干净的：`./scripts/bundle.sh`，产物就在 `dist/`。
@@ -41,7 +41,7 @@ xattr -dr com.apple.quarantine /Applications/QuickKit.app
 ./scripts/bundle.sh     # 产物在 dist/：.app / .zip / .dmg
 ```
 
-只跑不打包：`swift build -c release && .build/release/QuickKit`
+只跑不打包：`swift build -c release && .build/release/qmac`
 
 ## 四个功能
 
@@ -65,12 +65,12 @@ min(1,5,3) max sum(1000,2000) avg(1,2,3) pow(2,10)
 pi  e  tau  ans     2(3+4)  3pi  隐式乘法
 ```
 
-结果附带十六进制、二进制和「万」的换算。引擎是手写词法 + 递归下降（`Sources/QuickKit/Calculator.swift`），**不用 eval**，32 条用例自测。
+结果附带十六进制、二进制和「万」的换算。引擎是手写词法 + 递归下降（`Sources/qmac/Calculator.swift`），**不用 eval**，32 条用例自测。
 
 ### 2. 剪贴板历史（`⌘⇧V`）
 
 - 轮询 `NSPasteboard.changeCount`，文本和图片都记，重复内容自动去重并提到最前。
-- 数据在 `~/Library/Application Support/QuickKit/`，默认留 300 条，置顶的不受限制。
+- 数据在 `~/Library/Application Support/qmac/`，默认留 300 条，置顶的不受限制。
 - `↑↓` 选择，`↵` 粘贴回刚才那个应用，`⌘↵` 只复制，`⌘1`–`⌘9` 快速选取，`⌘P` 置顶，`⌘⌫` 删除。
 - 密码管理器写剪贴板时会打 `org.nspasteboard.ConcealedType` 标记，这类内容自动跳过；也可以在设置里加正则忽略规则。
 
@@ -113,7 +113,7 @@ pi  e  tau  ans     2(3+4)  3pi  隐式乘法
 ## 目录结构
 
 ```
-Sources/QuickKit/
+Sources/qmac/
   main.swift              入口（accessory 模式，不进 Dock）
   AppDelegate.swift       菜单栏、快捷键注册、面板与窗口调度
   Settings.swift          UserDefaults 配置 + 开机自启
@@ -134,9 +134,9 @@ scripts/
   calc-test.swift         计算引擎自测
 ```
 
-排查问题先看 `~/Library/Application Support/QuickKit/diagnostics.txt`——每次启动会写一份，含权限状态、四个快捷键各自的注册结果、菜单栏状态项枚举。
+排查问题先看 `~/Library/Application Support/qmac/diagnostics.txt`——每次启动会写一份，含权限状态、四个快捷键各自的注册结果、菜单栏状态项枚举。
 
-⚠️ 从终端直接跑 `QuickKit.app/Contents/MacOS/QuickKit` 时，TCC 会把**终端**当成责任进程，读到的权限状态是错的。要看真实状态必须用 `open` 正常启动再读该文件。
+⚠️ 从终端直接跑 `qmac.app/Contents/MacOS/qmac` 时，TCC 会把**终端**当成责任进程，读到的权限状态是错的。要看真实状态必须用 `open` 正常启动再读该文件。
 
 调试参数：`--show-search`、`--show-clipboard`、`--show-menubar`、`--selftest`、`--menubar-probe`。
 
