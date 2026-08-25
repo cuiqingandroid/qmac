@@ -23,8 +23,9 @@ struct DonateView: View {
             HStack(spacing: 18) {
                 ForEach(codes, id: \.file) { code in
                     VStack(spacing: 8) {
+                        // 收款码是竖版海报（约 3:4），按比例给足高度，别把二维码压小
                         qrImage(code.file)
-                            .frame(width: 190, height: 190)
+                            .frame(width: 192, height: 262)
                         Text(code.name)
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(code.tint)
@@ -36,7 +37,7 @@ struct DonateView: View {
                 .font(.system(size: 12))
         }
         .padding(24)
-        .frame(width: 470)
+        .frame(width: 456)
     }
 
     @ViewBuilder
