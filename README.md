@@ -15,11 +15,25 @@
 
 到 [Releases](https://github.com/cuiqingandroid/QuickKit/releases) 下载 dmg，拖进「应用程序」。
 
-App 用的是 ad-hoc 临时签名（没有 Apple 开发者账号），首次打开若被 Gatekeeper 拦住：右键 → 打开，或者
+### 首次打开会提示「来源不明 / 无法验证开发者」
+
+这是正常的。QuickKit 只有 ad-hoc 临时签名，**没有经过 Apple 公证**（公证需要 99 美元/年的 Apple Developer Program 账号）。
+浏览器下载的文件会被打上 `com.apple.quarantine` 隔离标记，Gatekeeper 因此拦下。
+
+**最快的办法**——终端里执行一行，去掉隔离标记：
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/QuickKit.app
 ```
+
+**或者走系统界面**（macOS 15 Sequoia 起，旧版那招「右键 → 打开」已经被 Apple 取消了）：
+
+1. 双击 QuickKit，会弹出被阻止的提示，点「完成」
+2. 打开「系统设置 → 隐私与安全性」，往下滚
+3. 会看到一行「已阻止 QuickKit…」，点右边的**「仍要打开」**
+4. 再确认一次，之后就不会再问了
+
+介意这个提示、或者不放心来路的话，**直接克隆仓库自己编译**是最干净的：`./scripts/bundle.sh`，产物就在 `dist/`。
 
 自己编译：
 

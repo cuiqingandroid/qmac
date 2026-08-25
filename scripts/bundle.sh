@@ -69,8 +69,34 @@ PLIST
 
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
-echo "==> 临时签名（ad-hoc）"
-codesign --force --deep --sign - "$APP"
+# 有 Developer ID 证书就正式签名 + 公证，没有就退回 ad-hoc 临时签名。
+# 只有经过公证的包，用户下载后才不会看到「来源不明」。
+IDENTITY="${QUICKKIT_SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2>/dev/null \
+    | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')}"
+NOTARY_PROFILE="${QUICKKIT_NOTARY_PROFILE:-AC_PASSWORD}"
+NOTARIZED=0
+
+if [ -n "$IDENTITY" ]; then
+    echo "==> 正式签名：$IDENTITY"
+    codesign --force --deep --options runtime --timestamp --sign "$IDENTITY" "$APP"
+
+    if xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+        echo "==> 提交公证（可能要等几分钟）"
+        ditto -c -k --keepParent "$APP" "$DIST/notarize.zip"
+        if xcrun notarytool submit "$DIST/notarize.zip" --keychain-profile "$NOTARY_PROFILE" --wait; then
+            xcrun stapler staple "$APP" && NOTARIZED=1
+        else
+            echo "   ! 公证失败，产物仍可用但用户会看到来源提示"
+        fi
+        rm -f "$DIST/notarize.zip"
+    else
+        echo "   ! 没有公证凭据，跳过公证。先跑一次："
+        echo "     xcrun notarytool store-credentials $NOTARY_PROFILE --apple-id <你的AppleID> --team-id <TeamID> --password <应用专用密码>"
+    fi
+else
+    echo "==> 临时签名（ad-hoc）——没有 Developer ID 证书，用户下载后会看到「来源不明」"
+    codesign --force --deep --sign - "$APP"
+fi
 
 echo "==> 打包"
 rm -f "$DIST/$APP_NAME-$VERSION.zip" "$DIST/$APP_NAME-$VERSION.dmg"
@@ -83,6 +109,10 @@ ln -s /Applications "$STAGE/Applications"
 hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format ULFO \
     "$DIST/$APP_NAME-$VERSION.dmg" >/dev/null
 rm -rf "$STAGE"
+
+if [ "$NOTARIZED" = "1" ]; then
+    xcrun stapler staple "$DIST/$APP_NAME-$VERSION.dmg" >/dev/null 2>&1 && echo "==> dmg 已装订公证票据"
+fi
 
 echo
 echo "==> 完成"
