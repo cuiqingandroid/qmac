@@ -18,8 +18,11 @@ final class PanelController {
     var onHide: (@MainActor () -> Void)?
 
     enum Placement {
-        /// 屏幕水平居中，纵向按比例
+        /// 屏幕水平居中，纵向按比例（面板中心落在该比例处）
         case centered(topRatio: CGFloat)
+        /// 水平居中，**顶边**固定在可见区域顶部往下 ratio 处。
+        /// 内容变多只往下长，框的位置不会跟着飘。
+        case pinnedTop(ratio: CGFloat)
         /// 贴着菜单栏正下方、靠右——菜单栏图标就在那一侧
         case underMenuBarRight
         /// 刘海正下方（没有刘海的屏幕就退化成顶部居中）
@@ -29,6 +32,9 @@ final class PanelController {
     private let placement: Placement
     private var keyMonitor: Any?
     private var previousApp: NSRunningApplication?
+    /// 显示时锁定的那块屏。内容变高触发重新定位时不能再按鼠标位置挑屏，
+    /// 否则边打字边挪鼠标到另一块屏，面板会突然跳过去。
+    private var anchorScreen: NSScreen?
 
     init<Content: View>(content: Content, width: CGFloat, height: CGFloat?, placement: Placement) {
         self.placement = placement
@@ -61,7 +67,7 @@ final class PanelController {
                                                object: panel, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self, self.panel.isVisible else { return }
-                self.positionOnActiveScreen()
+                self.positionOnActiveScreen(reuseAnchor: true)
             }
         }
 
@@ -82,9 +88,19 @@ final class PanelController {
 
     var isVisible: Bool { panel.isVisible }
 
+    /// pinnedTop 模式下面板能用的最大高度：让上下留白一样宽。
+    /// 内容超过这个高度就该在面板内部滚动，而不是把框撑出屏幕。
+    static func availableHeight(ratio: CGFloat) -> CGFloat {
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        guard let visible = screen?.visibleFrame else { return 480 }
+        return max(240, visible.height - visible.height * ratio * 2)
+    }
+
     func show() {
         if !panel.isVisible {
             previousApp = NSWorkspace.shared.frontmostApplication
+            anchorScreen = nil
         }
         positionOnActiveScreen()
         NSApp.activate(ignoringOtherApps: true)
@@ -128,9 +144,11 @@ final class PanelController {
         }
     }
 
-    private func positionOnActiveScreen() {
+    private func positionOnActiveScreen(reuseAnchor: Bool = false) {
         let mouse = NSEvent.mouseLocation
-        var screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        var screen = (reuseAnchor ? anchorScreen : nil)
+            ?? NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
+            ?? NSScreen.main
 
         // 刘海模式下优先落在带刘海的那块屏上
         if case .underNotch = placement,
@@ -138,6 +156,7 @@ final class PanelController {
             screen = notched
         }
         guard let visible = screen?.visibleFrame else { return }
+        anchorScreen = screen
 
         let size = panel.frame.size
         switch placement {
@@ -145,6 +164,12 @@ final class PanelController {
             let x = visible.midX - size.width / 2
             let y = visible.maxY - visible.height * topRatio - size.height / 2
             panel.setFrameOrigin(NSPoint(x: x.rounded(), y: max(visible.minY + 20, y).rounded()))
+        case .pinnedTop(let ratio):
+            let topGap = (visible.height * ratio).rounded()
+            let x = visible.midX - size.width / 2
+            let y = visible.maxY - topGap - size.height
+            panel.setFrameOrigin(NSPoint(x: x.rounded(), y: max(visible.minY + 8, y).rounded()))
+
         case .underNotch:
             let notchCenterX: CGFloat
             if let screen, screen.safeAreaInsets.top > 0 || screen.auxiliaryTopLeftArea != nil {

@@ -32,6 +32,8 @@ final class SearchViewModel: ObservableObject {
     @Published private(set) var entries: [CalcEntry] = []
     @Published private(set) var toast = ""
     @Published private(set) var errorText = ""
+    /// 面板允许的最大高度（由 PanelController 在显示前按屏幕算好）
+    @Published var maxPanelHeight: CGFloat = 480
 
     var onHide: () -> Void = {}
     var onCopyAndPaste: (String) -> Void = { _ in }
@@ -84,7 +86,7 @@ final class SearchViewModel: ObservableObject {
         errorText = ""
 
         if text.isEmpty {
-            next = entries.prefix(5).map { SearchRow.history($0) }
+            next = entries.prefix(8).map { SearchRow.history($0) }
             rows = next
             selection = 0
             return
@@ -106,7 +108,7 @@ final class SearchViewModel: ObservableObject {
                 return (entry, score)
             }
             .sorted { $0.1 > $1.1 }
-            .prefix(8)
+            .prefix(12)
             .map { SearchRow.app($0.0) }
         next.append(contentsOf: matches)
 
@@ -229,6 +231,11 @@ struct SearchView: View {
     @ObservedObject var model: SearchViewModel
     @FocusState private var focused: Bool
 
+    /// 面板总高度减去输入框和底部提示条，剩下的留给结果列表
+    private var listMaxHeight: CGFloat {
+        max(120, model.maxPanelHeight - 64 - 34)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
@@ -254,14 +261,25 @@ struct SearchView: View {
 
             if !model.rows.isEmpty {
                 Divider()
-                VStack(spacing: 1) {
-                    ForEach(Array(model.rows.enumerated()), id: \.element.id) { index, row in
-                        rowView(row, selected: index == model.selection)
-                            .contentShape(Rectangle())
-                            .onTapGesture { model.selection = index; model.activate(row) }
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 1) {
+                            ForEach(Array(model.rows.enumerated()), id: \.element.id) { index, row in
+                                rowView(row, selected: index == model.selection)
+                                    .id(row.id)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { model.selection = index; model.activate(row) }
+                            }
+                        }
+                        .padding(6)
+                    }
+                    // 装得下就按内容高度，装不下就滚动，框本身不再往下长
+                    .frame(maxHeight: listMaxHeight)
+                    .onChange(of: model.selection) { _, index in
+                        guard model.rows.indices.contains(index) else { return }
+                        proxy.scrollTo(model.rows[index].id, anchor: .center)
                     }
                 }
-                .padding(6)
             }
 
             Divider()

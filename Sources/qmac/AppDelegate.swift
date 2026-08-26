@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var accessibilityAlertShown = false
 
     private let clipboardModel = ClipboardViewModel()
+    private static let searchTopRatio: CGFloat = 0.18
     private let searchModel = SearchViewModel()
     private let menuBarModel = MenuBarViewModel()
 
@@ -24,9 +25,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private lazy var searchPanel: PanelController = {
         let controller = PanelController(content: SearchView(model: searchModel),
-                                         width: 620, height: nil, placement: .centered(topRatio: 0.24))
+                                         width: 620, height: nil,
+                                         placement: .pinnedTop(ratio: AppDelegate.searchTopRatio))
         controller.onKeyDown = { [weak self] event in self?.searchModel.handleKey(event) ?? false }
-        controller.onShow = { [weak self] in self?.searchModel.reset() }
+        controller.onShow = { [weak self] in
+            // 上下留白等宽，剩下的高度给结果列表；超出就在面板内部滚动
+            self?.searchModel.maxPanelHeight =
+                PanelController.availableHeight(ratio: AppDelegate.searchTopRatio)
+            self?.searchModel.reset()
+        }
         return controller
     }()
 
