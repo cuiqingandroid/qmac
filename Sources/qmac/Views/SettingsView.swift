@@ -60,7 +60,7 @@ struct SettingsView: View {
                             .frame(height: 56)
                             .padding(4)
                             .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.primary.opacity(0.15)))
-                            .onChange(of: ignoreText) { _, new in
+                            .onValueChange(of: ignoreText) { new in
                                 let list = new.split(separator: "\n").map { String($0).trimmingCharacters(in: .whitespaces) }
                                     .filter { !$0.isEmpty }
                                 let bad = list.filter { (try? NSRegularExpression(pattern: $0)) == nil }

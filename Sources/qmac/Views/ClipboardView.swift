@@ -172,7 +172,7 @@ struct ClipboardView: View {
                 }
                 .padding(6)
             }
-            .onChange(of: model.selection) { _, new in
+            .onValueChange(of: model.selection) { new in
                 guard model.items.indices.contains(new) else { return }
                 withAnimation(.easeOut(duration: 0.12)) {
                     proxy.scrollTo(model.items[new].id, anchor: .center)

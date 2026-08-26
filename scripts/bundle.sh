@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 APP_NAME="qmac"
-VERSION="1.0.0"
+VERSION="1.0.1"
 BUNDLE_ID="com.cuiqing.qmac"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
@@ -59,7 +59,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundlePackageType</key>     <string>APPL</string>
     <key>CFBundleShortVersionString</key> <string>$VERSION</string>
     <key>CFBundleVersion</key>         <string>$VERSION</string>
-    <key>LSMinimumSystemVersion</key>  <string>14.0</string>
+    <key>LSMinimumSystemVersion</key>  <string>13.0</string>
     <key>LSUIElement</key>             <true/>
     <key>NSHighResolutionCapable</key> <true/>
     <key>NSHumanReadableCopyright</key><string>qmac</string>

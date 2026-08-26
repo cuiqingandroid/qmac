@@ -275,7 +275,7 @@ struct SearchView: View {
                     }
                     // 装得下就按内容高度，装不下就滚动，框本身不再往下长
                     .frame(maxHeight: listMaxHeight)
-                    .onChange(of: model.selection) { _, index in
+                    .onValueChange(of: model.selection) { index in
                         guard model.rows.indices.contains(index) else { return }
                         proxy.scrollTo(model.rows[index].id, anchor: .center)
                     }

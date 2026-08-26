@@ -148,6 +148,10 @@ scripts/
 
 调试参数：`--show-search`、`--show-clipboard`、`--show-menubar`、`--selftest`、`--menubar-probe`。
 
+## 系统要求
+
+macOS 13 Ventura 及以上（Apple Silicon）。
+
 ## 打赏
 
 免费开源，觉得顺手可以请我喝杯咖啡，完全自愿。App 内菜单栏图标 → 「请作者喝杯咖啡…」也能打开。
