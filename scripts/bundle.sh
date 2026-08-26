@@ -5,20 +5,36 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 APP_NAME="qmac"
-VERSION="1.0.1"
+VERSION="1.0.2"
 BUNDLE_ID="com.cuiqing.qmac"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
 
-echo "==> 编译（release，-Osize 体积优先）"
-swift build -c release -Xswiftc -Osize
-BIN="$(swift build -c release --show-bin-path)/$APP_NAME"
+# 通用二进制：Apple Silicon + Intel。
+# 只出 arm64 的话，Intel Mac 上会报「这台 Mac 不支持此应用程序」。
+# swift build --arch 需要完整 Xcode（xcbuild），只有 Command Line Tools 时
+# 只能分别指定 target 编两次，再用 lipo 合并。
+echo "==> 编译 arm64（release，-Osize 体积优先）"
+swift build -c release -Xswiftc -Osize -Xswiftc -target -Xswiftc arm64-apple-macos13.0
+BIN_ARM="$(swift build -c release --show-bin-path)/$APP_NAME"
+
+echo "==> 编译 x86_64"
+swift build -c release --scratch-path .build-x86 -Xswiftc -Osize \
+    -Xswiftc -target -Xswiftc x86_64-apple-macos13.0
+BIN_X86="$(swift build -c release --scratch-path .build-x86 --show-bin-path)/$APP_NAME"
+
+echo "==> 合并为通用二进制"
+mkdir -p "$DIST"
+BIN="$DIST/$APP_NAME-universal"
+lipo -create "$BIN_ARM" "$BIN_X86" -output "$BIN"
+lipo -archs "$BIN" | sed 's/^/   架构: /'
 
 echo "==> 组装 .app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/$APP_NAME"
 strip -rSTx "$APP/Contents/MacOS/$APP_NAME" 2>/dev/null || true
+rm -f "$BIN"
 
 echo "==> 生成图标"
 python3 scripts/make-icon.py
@@ -120,4 +136,4 @@ echo "==> 完成"
 du -sh "$APP" | sed 's/^/  .app   /'
 du -h "$DIST/$APP_NAME-$VERSION.zip" | sed 's/^/  zip    /'
 du -h "$DIST/$APP_NAME-$VERSION.dmg" | sed 's/^/  dmg    /'
-echo "  可执行文件 $(du -h "$APP/Contents/MacOS/$APP_NAME" | cut -f1)"
+echo "  可执行文件 $(du -h "$APP/Contents/MacOS/$APP_NAME" | cut -f1) （$(lipo -archs "$APP/Contents/MacOS/$APP_NAME")）"

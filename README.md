@@ -150,7 +150,7 @@ scripts/
 
 ## 系统要求
 
-macOS 13 Ventura 及以上（Apple Silicon）。
+macOS 13 Ventura 及以上，**Apple Silicon 与 Intel 都支持**（通用二进制）。
 
 ## 打赏
 
